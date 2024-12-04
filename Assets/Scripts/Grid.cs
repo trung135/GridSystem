@@ -1,15 +1,27 @@
+using System;
 using UnityEngine;
 using CodeMonkey.Utils;
 
 public class Grid
 {
-    private int _width;
-    private int _height;
-    private float _cellSize;
-    private Vector3 _originPosition;
+    public event EventHandler<OnGridValueChangedEventArgs> OnGridValueChanged;
+    public class OnGridValueChangedEventArgs : EventArgs
+    {
+        public int X;
+        public int Y;
+    }
+    
+    private readonly int _width;
+    private readonly int _height;
+    private readonly float _cellSize;
+    private readonly Vector3 _originPosition;
     private readonly int[,] _gridArray;
-    private TextMesh[,] _textMeshArray;
+    private readonly TextMesh[,] _textMeshArray;
 
+    public int Width { get { return _width; } }
+    public int Height { get { return _height; } }
+    public float CellSize { get { return _cellSize; } }
+    
     public Grid(int width, int height, float cellSize, Vector3 originPosition)
     {
         this._width = width;
@@ -24,7 +36,7 @@ public class Grid
         {
             for (int y = 0; y < this._gridArray.GetLength(1); y++)
             {
-                _textMeshArray[x, y] = UtilsClass.CreateWorldText(_gridArray[x, y].ToString(), null,
+                _textMeshArray[x, y] = UtilsClass.CreateWorldText("", null,
                     GetWorldPosition(x, y) + new Vector3(cellSize, cellSize) * 0.5f, 20, Color.white,
                     TextAnchor.MiddleCenter);
                 Debug.DrawLine(GetWorldPosition(x, y), GetWorldPosition(x, y + 1), Color.white, 100f);
@@ -36,7 +48,7 @@ public class Grid
         Debug.DrawLine(GetWorldPosition(width, 0), GetWorldPosition(width, height), Color.white, 100f);
     }
 
-    private Vector3 GetWorldPosition(int x, int y)
+    public Vector3 GetWorldPosition(int x, int y)
     {
         return new Vector3(x, y) * _cellSize + _originPosition;
     }
@@ -52,7 +64,9 @@ public class Grid
         if (x >= 0 && y >= 0 && x < _width && y < _height)
         {
             _gridArray[x, y] = value;
-            _textMeshArray[x, y].text = _gridArray[x, y].ToString();
+            //_textMeshArray[x, y].text = _gridArray[x, y].ToString();
+            if (OnGridValueChanged != null)
+                OnGridValueChanged(this, new OnGridValueChangedEventArgs { X = x, Y = y });
         }
     }
 
@@ -62,7 +76,7 @@ public class Grid
         SetValue(x, y, value);
     }
 
-    private int GetValue(int x, int y)
+    public int GetValue(int x, int y)
     {
         if (x >= 0 && y >= 0 && x < _width && y < _height)
             return _gridArray[x, y];
